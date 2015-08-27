@@ -5,8 +5,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 
-class UsersController extends Resource {
-
+object UsersController extends Controller {
   val name = "users"
 
   override def index = complete("{}")
@@ -18,12 +17,19 @@ object HTTPService {
 
   val config = ConfigFactory.load
 
+  val routes =
+    pathPrefix("api") {
+      pathPrefix("v1") {
+        UsersController.routes
+      }
+    }
+
   def run = {
     val interface = Option(config.getString("http.interface")).getOrElse("0.0.0.0")
     val port = Option(config.getInt("http.port")).getOrElse(9000)
     println(s"Running http server on $interface:$port")
     Http().bindAndHandle(
-      Router.resources(new UsersController),
+      routes,
       interface,
       port
     )
